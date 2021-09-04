@@ -122,7 +122,7 @@ node_t *bstree_insert(bstree *t, const key_t key) {
         parent_n->right = new_n;
     }
 
-    return t->root;
+    return new_n;
 }
 
 // // 중위 트리 순회 과정 출력하기
