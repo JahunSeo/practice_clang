@@ -111,12 +111,13 @@ node_t *bstree_insert(bstree *t, const key_t key) {
     // 먼저 새로운 노드의 부모 노드 설정
     new_n->parent = parent_n;
     // 새로운 노드를 배치할 때,
-    // 부모 노드가 비어 있는 경우, 즉 트리가 비어 있던 경우,
+    // 부모 노드가 비어 있는 경우, 즉 트리가 비어 있던 경우
     if (parent_n == NULL) {
         t->root = new_n;
-    // 부모 노드의 key보다 작은 경우,
+    // 부모 노드의 key보다 작은 경우
     } else if (new_n->key < parent_n->key) {
         parent_n->left = new_n;
+    // 부모 노드의 key보다 크거나 같은 경우
     } else {
         parent_n->right = new_n;
     }
