@@ -18,9 +18,10 @@ void printList(struct Node* n) {
     printf("\n");
 }
 
+
 // program to create a simple linked list with 3 nodes
 int main(void) {
-    printf("hello linkedlist!\n");
+    printf("hello linkedlist! 1!\n");
 
     struct Node* head = NULL;
     struct Node* second = NULL;
