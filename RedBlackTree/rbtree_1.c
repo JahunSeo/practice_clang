@@ -62,21 +62,11 @@ void rbtree_insert_fixup(rbtree *t, node_t *z);
 // 중위 트리 순회
 void rbtree_inorder_walk(const node_t *x);
 
-// NIL 정의
-// - rbtree 구조체 내에 멤버로 넣는 방법과 전역 변수로 두는 방법 가능
-// - 이번 주차에는 rbtree 구조체를 수정할 수 없기 때문에 전역 변수로 시도
-// NIL.color 로 입력하면 에러가 나는군..
-node_t _NIL = {
-    .color = RBTREE_BLACK,
-};
-node_t *NIL = &_NIL;
-
 /* 
  * main 함수
  */
 int main(void) {
     printf("Hello, RBTree!\n");
-    printf("use NIL! %d \n",NIL->color);
 
     // 트리 생성
     rbtree *t = new_rbtree();
@@ -186,7 +176,7 @@ void rbtree_rotate_right(rbtree *t, node_t *x) {
     y->parent = x->parent;
     // - x 부모 관점
     //   - x 부모가 없는 경우 (즉, x가 루트인 경우)
-    if (x->parent != NULL) {
+    if (x->parent == NULL) {
         t->root = y;
     //   - x가 왼쪽 자식인 경우
     } else if (x == x->parent->left) {
@@ -227,7 +217,7 @@ void rbtree_insert_fixup(rbtree *t, node_t *z) {
             // - 부모와 삼촌을 BLACK, 할아버지를 RED로 바꾸면, 일단 z와 부모 간의 문제는 해결
             // - 하지만 할아버지가 RED로 변하여 본인의 부모와 없던 문제가 생길 수 있으므로,
             // - z를 'z의 부모 부모(=할아버지)'로 업데이트
-            if (uncle->color == RBTREE_RED) {
+            if (uncle != NULL && uncle->color == RBTREE_RED) {
                 // 부모와 삼촌을 BLACK으로
                 z->parent->color = RBTREE_BLACK;
                 uncle->color = RBTREE_BLACK;
@@ -263,7 +253,7 @@ void rbtree_insert_fixup(rbtree *t, node_t *z) {
             // 'z 삼촌' 설정: 할아버지의 왼쪽 자식
             uncle = z->parent->parent->left;
             // [CASE 1] 'z 삼촌'이 RED 인 경우
-            if (uncle->color == RBTREE_RED) {
+            if (uncle != NULL && uncle->color == RBTREE_RED) {
                 z->parent->color = RBTREE_BLACK;
                 uncle->color = RBTREE_BLACK;
                 z->parent->parent->color = RBTREE_RED;
