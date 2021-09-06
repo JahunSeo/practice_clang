@@ -1,47 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-/* 
- * 구조체 및 기본 함수 입출력값 정의
- */
-typedef enum {RBTREE_RED, RBTREE_BLACK} color_t;
-
-typedef int key_t;
-
-typedef struct node_t {
-    color_t color;
-    key_t key;
-    struct node_t *parent, *left, *right;
-} node_t;
-
-typedef struct {
-    node_t *root;
-} rbtree;
-
-// new_rbtree: 새로운 RB트리 구조체를 생성하기
-rbtree *new_rbtree(void);
-
-// delete_rbtree:
-void delete_rbtree(rbtree *t);
-
-// rbtree_insert:
-node_t *rbtree_insert(rbtree *t, const key_t key);
-
-// rbtree_find:
-node_t *rbtree_find(const rbtree *t, const key_t key);
-
-// rbtree_min:
-node_t *rbtree_min(const rbtree *t, const key_t key);
-
-// rbtree_max:
-node_t *rbtree_max(const rbtree *t, const key_t key);
-
-// rbtree_erase:
-int rbtree_erase(rbtree *t, const node_t *node);
-
-// rbtree_to_array:
-// - size_t는 부호 없는 정수형(unsigned int)으로 이미 정의되어 있음
-int rbtree_to_array(const rbtree *t, key_t *p, const size_t size);
+#include "rbtree.h"
 
 
 /* 
@@ -57,10 +16,11 @@ void rbtree_rotate_right(rbtree *t, node_t *x);
 // rbtree_insert_fixup:
 void rbtree_insert_fixup(rbtree *t, node_t *z);
 
-
-
 // 중위 트리 순회
 void rbtree_inorder_walk(const node_t *x);
+
+// 그래프 그리기
+void rbtree_graph(const rbtree *t);
 
 /* 
  * main 함수
@@ -130,6 +90,11 @@ void rbtree_inorder_walk(const node_t *x) {
     }
 }
 
+void rbtree_graph(const rbtree* t) {
+    node_t frontier[10];
+
+}
+
 void rbtree_rotate_left(rbtree *t, node_t *x) {
     // 1. 'y' 설정: 기준이 되는 x의 오른쪽 자식
     node_t *y = x->right;
@@ -196,27 +161,19 @@ void rbtree_insert_fixup(rbtree *t, node_t *z) {
     // 1. 트리 규칙을 위반한 영역 수정하기
     // - 'z'는 트리 규칙에 문제가 생길 수 있는 노드이며, 그 시작은 트리에 새로 추가된 노드
     // - 'z'-'z 부모'가 RED-RED 인지 확인하여 규칙을 유지할 수 있도록 트리의 구조 변경
-    // - 부모 노드 NULL 여부 필요?
-    node_t *uncle;
-    /* DEBUGGING */
-    if (z->parent != NULL) {
-        printf("parent: %d, z: %d\n", z->parent->key, z->key);
-    }
-    /* ** ** ** */
-    
+    // - (주의! 경계노드 NIL을 별도로 활용하지 않고 있어서 부모 노드 NULL 여부 체크 필요)
+    node_t *uncle;    
     while (z->parent != NULL && z->parent->color == RBTREE_RED) {
         // 'z 부모'가 왼쪽 자식인 경우
         if (z->parent == z->parent->parent->left) {
             // 'z 부모의 형제(=z 삼촌)' 설정: 할아버지의 오른쪽 자식
-            
-            // !!!! BUG !!!! uncle이 NULL인 경우
             uncle = z->parent->parent->right;
-            
             // [CASE 1] 'z 삼촌'이 RED인 경우
             // - 부모~삼촌이 RED~RED 이므로, 할아버지는 반드시 BLACK
             // - 부모와 삼촌을 BLACK, 할아버지를 RED로 바꾸면, 일단 z와 부모 간의 문제는 해결
             // - 하지만 할아버지가 RED로 변하여 본인의 부모와 없던 문제가 생길 수 있으므로,
             // - z를 'z의 부모 부모(=할아버지)'로 업데이트
+            // - (주의! uncle 노드 NULL 여부 체크 필요)
             if (uncle != NULL && uncle->color == RBTREE_RED) {
                 // 부모와 삼촌을 BLACK으로
                 z->parent->color = RBTREE_BLACK;
