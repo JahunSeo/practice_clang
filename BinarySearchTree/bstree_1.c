@@ -129,7 +129,7 @@ node_t *bstree_insert(bstree *t, const key_t key) {
 }
 
 // 노드 v1을 v2로 대체하는 함수
-void transplant(bstree* t, node_t* v1, node_t* v2) {
+void bstree_transplant(bstree* t, node_t* v1, node_t* v2) {
     // 'v1의 부모'와 'v2'를 연결
     // - v1 부모 관점
     //   - v1이 루트인 경우
@@ -148,7 +148,12 @@ void transplant(bstree* t, node_t* v1, node_t* v2) {
     }
 }
 
-// 트리에서 노드 z를 삭제하는 함수
-int bstree_erase(const bstree *t, node_t *z) {
+// 트리에서 노드 v의 직후 원소를 찾는 함수
+node_t *bstree_successor(bstree *t, node_t *v) {
+    
+} 
 
-}
+// 트리에서 노드 z를 삭제하는 함수
+// int bstree_erase(const bstree *t, node_t *z) {
+//     if 
+// }
