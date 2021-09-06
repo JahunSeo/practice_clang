@@ -55,19 +55,53 @@ void rbtree_rotate_left(rbtree *t, node_t *x);
 void rbtree_rotate_right(rbtree *t, node_t *x);
 
 // rbtree_insert_fixup:
-node_t *rbtree_insert_fixup(rbtree *t, node_t *z);
+void rbtree_insert_fixup(rbtree *t, node_t *z);
 
 
 
 // 중위 트리 순회
-int rbtree_inorder_walk(const rbtree *t);
+void rbtree_inorder_walk(const node_t *x);
 
+// NIL 정의
+// - rbtree 구조체 내에 멤버로 넣는 방법과 전역 변수로 두는 방법 가능
+// - 이번 주차에는 rbtree 구조체를 수정할 수 없기 때문에 전역 변수로 시도
+// NIL.color 로 입력하면 에러가 나는군..
+node_t _NIL = {
+    .color = RBTREE_BLACK,
+};
+node_t *NIL = &_NIL;
 
 /* 
  * main 함수
  */
 int main(void) {
-    printf("Hello, RBTree!");
+    printf("Hello, RBTree!\n");
+    printf("use NIL! %d \n",NIL->color);
+
+    // 트리 생성
+    rbtree *t = new_rbtree();
+    // 비어 있는 트리 확인
+    printf("rbtree : ");
+    rbtree_inorder_walk(t->root);
+    printf("\n\n");
+    // 트리에 10 추가
+    rbtree_insert(t, 10);
+    printf("rbtree : ");
+    rbtree_inorder_walk(t->root);
+    printf("\n\n");
+    // 트리에 5, 15 추가
+    rbtree_insert(t, 5);
+    rbtree_insert(t, 15);
+    printf("rbtree : ");
+    rbtree_inorder_walk(t->root);
+    printf("\n\n");
+    // 트리에 35, 20 추가
+    rbtree_insert(t, 35);
+    rbtree_insert(t, 20);
+    printf("rbtree : ");
+    rbtree_inorder_walk(t->root);    
+    printf("\n\n");
+
     return 0;
 }
 
@@ -84,6 +118,26 @@ void delete_rbtree(rbtree *t) {
 
     // 트리의 메모리 반환하기
     free(t);
+}
+
+void rbtree_inorder_walk(const node_t *x) {
+    if (x != NULL) {
+        rbtree_inorder_walk(x->left);
+        int parent_key;
+        char color;
+        if (x->parent != NULL) {
+            parent_key = x->parent->key;
+        } else {
+            parent_key = 0;
+        }
+        if (x->color == RBTREE_RED) {
+            color = 'R';
+        } else {
+            color = 'B';
+        }
+        printf(" %d>[%d](%c) ", parent_key, x->key, color);
+        rbtree_inorder_walk(x->right);
+    }
 }
 
 void rbtree_rotate_left(rbtree *t, node_t *x) {
@@ -148,7 +202,95 @@ void rbtree_rotate_right(rbtree *t, node_t *x) {
     y->right = x;
 }
 
+void rbtree_insert_fixup(rbtree *t, node_t *z) {
+    // 1. 트리 규칙을 위반한 영역 수정하기
+    // - 'z'는 트리 규칙에 문제가 생길 수 있는 노드이며, 그 시작은 트리에 새로 추가된 노드
+    // - 'z'-'z 부모'가 RED-RED 인지 확인하여 규칙을 유지할 수 있도록 트리의 구조 변경
+    // - 부모 노드 NULL 여부 필요?
+    node_t *uncle;
+    /* DEBUGGING */
+    if (z->parent != NULL) {
+        printf("parent: %d, z: %d\n", z->parent->key, z->key);
+    }
+    /* ** ** ** */
+    
+    while (z->parent != NULL && z->parent->color == RBTREE_RED) {
+        // 'z 부모'가 왼쪽 자식인 경우
+        if (z->parent == z->parent->parent->left) {
+            // 'z 부모의 형제(=z 삼촌)' 설정: 할아버지의 오른쪽 자식
+            
+            // !!!! BUG !!!! uncle이 NULL인 경우
+            uncle = z->parent->parent->right;
+            
+            // [CASE 1] 'z 삼촌'이 RED인 경우
+            // - 부모~삼촌이 RED~RED 이므로, 할아버지는 반드시 BLACK
+            // - 부모와 삼촌을 BLACK, 할아버지를 RED로 바꾸면, 일단 z와 부모 간의 문제는 해결
+            // - 하지만 할아버지가 RED로 변하여 본인의 부모와 없던 문제가 생길 수 있으므로,
+            // - z를 'z의 부모 부모(=할아버지)'로 업데이트
+            if (uncle->color == RBTREE_RED) {
+                // 부모와 삼촌을 BLACK으로
+                z->parent->color = RBTREE_BLACK;
+                uncle->color = RBTREE_BLACK;
+                // 할아버지를 RED로
+                z->parent->parent->color = RBTREE_RED;
+                // 새로운 타겟 노드로 z 변경
+                z = z->parent->parent;
+            // [CASE 2,3] 'z 삼촌'이 BLACK인 경우
+            // - 부모~삼촌이 RED~BLACK 이므로, 할아버지는 반드시 BLACK
+            // - 이 때는 '할아버지' 위치를 BLACK으로 유지하면서 '삼촌' 위치를 RED로 만들어 문제 해결
+            // - (한쪽으로 치우친 RED를 반대편으로 넘겨주는 셈)
+            } else {
+                // [CASE 2] 'z'가 오른쪽 자식인 경우
+                // - 이 경우 할아버지-부모-z가 < 모양으로 꺾여 있음
+                // - 할아버지-부모-z가 일직선에 있는 CASE 3 상태로 먼저 만듦
+                if (z == z->parent->right) {
+                    z = z->parent;
+                    rbtree_rotate_left(t, z);
+                }
+                // [CASE 3] 'z'가 왼쪽 자식인 경우
+                // - 할아버지-부모-z가 / 모양으로 일직선 위에 있음
+                // - RED가 한 쪽으로 치우쳐 있으므로, 할아버지를 기준으로 반대편에 RED를 하나 넘겨주어 균형을 맞춤
+                // - 이를 위해 할아버지를 RED, 부모를 BLACK으로 바꾼 뒤, 할아버지를 기준으로 오른쪽 회전함
+                // - 그러면 부모 BLACK에 두 자식이 RED인 형태로 균형이 맞게 됨
+                z->parent->color = RBTREE_BLACK;
+                z->parent->parent->color = RBTREE_RED;
+                rbtree_rotate_right(t, z->parent->parent);
+                // CASE 2,3 혹은 CASE 3을 수행한 이후에는
+                // z-부모가 RED-BLACK 이므로 루프 종료
+            }
+        // 'z 부모'가 오른쪽 자식인 경우
+        } else {
+            // 'z 삼촌' 설정: 할아버지의 왼쪽 자식
+            uncle = z->parent->parent->left;
+            // [CASE 1] 'z 삼촌'이 RED 인 경우
+            if (uncle->color == RBTREE_RED) {
+                z->parent->color = RBTREE_BLACK;
+                uncle->color = RBTREE_BLACK;
+                z->parent->parent->color = RBTREE_RED;
+                z = z->parent->parent;
+            // [CASE 2,3] 'z 삼촌'이 BLACK 인 경우
+            } else {
+                // [CASE 2] 'z'가 왼쪽 자식인 경우 
+                // - 할아버지-부모-z가 > 모양으로 꺾여 있음
+                if (z == z->parent->left) {
+                    z = z->parent;
+                    rbtree_rotate_right(t, z);
+                }
+                // [CASE 3] 'z'가 오른쪽 자식인 경우
+                // - 할아버지-부모-z가 \ 모양으로 일직선 위에 있음
+                z->parent->color = RBTREE_BLACK;
+                z->parent->parent->color = RBTREE_RED;
+                rbtree_rotate_left(t, z->parent->parent);
+            }
+        } 
+
+    }
+    // 2. 루트 노드 BLACK으로 설정하기
+    t->root->color = RBTREE_BLACK;
+}
+
 node_t *rbtree_insert(rbtree *t, const key_t key) {
+    printf("[rbtree_insert] %d\n", key);
     // 1. 새로운 노드 생성하기
     node_t *new_n = (node_t *)malloc(sizeof(node_t));
     new_n->key = key;
@@ -184,7 +326,19 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
         parent_n->right = new_n;
     }
     // 4. RB트리 특성 유지시키기
-    // rbtree_insert_fixup()
+    /* DEBUGGING */
+    printf("before fixup : ");
+    rbtree_inorder_walk(t->root);
+    printf("\n");
+    /* ** ** ** */
+
+    rbtree_insert_fixup(t, new_n);
+
+    /* DEBUGGING */
+    printf("after fixup : ");
+    rbtree_inorder_walk(t->root);
+    printf("\n");
+    /* ** ** ** */
 
     // 5. 새로운 노드의 주소 리턴하기
     return new_n;
