@@ -87,19 +87,19 @@ void delete_rbtree(rbtree *t) {
 }
 
 void rbtree_rotate_left(rbtree *t, node_t *x) {
-    // 1. y 설정: 기준이 되는 x의 오른쪽 자식
+    // 1. 'y' 설정: 기준이 되는 x의 오른쪽 자식
     node_t *y = x->right;
-    // 2. y의 왼쪽 서브 트리를 x의 오른쪽 서브 트리로 변경
+    // 2. 'y'의 왼쪽 서브 트리를 'x'의 오른쪽 서브 트리로 변경
     // - x 관점
     x->right = y->left;
     // - y의 왼쪽 자식 관점
     if (y->left != NULL) {
         y->left->parent = x;
     } 
-    // 3. y를 x 부모 노드의 자식으로 변경
+    // 3. 'y'를 'x 부모'의 자식으로 변경
     // - y 관점
     y->parent = x->parent;
-    // - x의 부모 노드 관점
+    // - x 부모 관점
     //   - x가 루트인 경우
     if (x->parent == NULL) {
         t->root = y;
@@ -110,11 +110,42 @@ void rbtree_rotate_left(rbtree *t, node_t *x) {
     } else {
         x->parent->right = y;
     }
-    // 4. x를 y의 왼쪽 자식으로 설정
-    // - y 관점
-    y->left = x;
+    // 4. 'x'를 'y'의 자식으로 변경: x는 y의 왼쪽 자식
     // - x 관점
     x->parent = y;
+    // - y 관점
+    y->left = x;
+}
+
+void rbtree_rotate_right(rbtree *t, node_t *x) {
+    // 1. 'y' 설정: 기준이 되는 x의 왼쪽 자식
+    node_t *y = x->left;
+    // 2. 'y'의 오른쪽 서브 트리를 'x'의 왼쪽 서브 트리로 변경
+    // - x 관점
+    x->left = y->right;
+    // - y 의 오른쪽 자식 관점
+    if (y->right != NULL) {
+        y->right->parent = x;
+    }
+    // 3. 'y'를 'x 부모'의 자식으로 변경
+    // - y 관점
+    y->parent = x->parent;
+    // - x 부모 관점
+    //   - x 부모가 없는 경우 (즉, x가 루트인 경우)
+    if (x->parent != NULL) {
+        t->root = y;
+    //   - x가 왼쪽 자식인 경우
+    } else if (x == x->parent->left) {
+        x->parent->left = y;
+    //   - x가 오른쪽 자식인 경우
+    } else {
+        x->parent->right = y;
+    }
+    // 4. 'x'를 'y'의 자식으로 변경: x는 y의 오른쪽 자식
+    // - x 관점
+    x->parent = y;
+    // - y 관점
+    y->right = x;
 }
 
 node_t *rbtree_insert(rbtree *t, const key_t key) {
