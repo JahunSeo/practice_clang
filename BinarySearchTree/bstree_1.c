@@ -89,18 +89,21 @@ void delete_bstree(bstree *t) {
     // 트리의 메모리 반환하기
     free(t);
 }
-
-// bstree *t에서 const 를 해제함
 node_t *bstree_insert(bstree *t, const key_t key) {
+    printf("[bstree_insert] %d\n", key);
     // 1. 새로운 노드 생성하기
     node_t *new_n = (node_t *)malloc(sizeof(node_t));
     new_n->key = key;
-    new_n->left = new_n->right = NULL; // new_n->parent는 아래에서 결정됨
+    new_n->left = new_n->right = NULL;
     // 2. 트리에서 들어갈 장소 찾기
-    node_t *parent_n = NULL; // 새로운 노드의 부모 노드 위치를 초기 설정
-    node_t *child_n = t->root; // 새로운 노드의 위치를 초기 설정
+    // - 새로운 노드와 그 부모 노드 초기회
+    node_t *parent_n = NULL;
+    node_t *child_n = t->root;
+    // - 리프 노드에 도달할 때까지 이동 
     while (child_n != NULL) {
+        // - 부모 노드 위치 업데이트
         parent_n = child_n;
+        // - 새로운 노드 위치 업데이트
         if (new_n->key < child_n->key) {
             child_n = child_n->left;
         } else {
@@ -108,78 +111,44 @@ node_t *bstree_insert(bstree *t, const key_t key) {
         }
     }
     // 3. 트리에 새로운 노드 배치하기
-    // 먼저 새로운 노드의 부모 노드 설정
+    // - 새로운 노드에 부모 노드 표시
     new_n->parent = parent_n;
-    // 새로운 노드를 배치할 때,
-    // 부모 노드가 비어 있는 경우, 즉 트리가 비어 있던 경우
+    // - 부모 노드에 새로운 노드 표시
+    //   - 부모 노드가 비어 있는 경우 (즉 새로운 노드가 루트인 경우) 
     if (parent_n == NULL) {
         t->root = new_n;
-    // 부모 노드의 key보다 작은 경우
+    //   - 부모 노드가 있고 새로운 노드가 왼쪽 자식인 경우
     } else if (new_n->key < parent_n->key) {
         parent_n->left = new_n;
-    // 부모 노드의 key보다 크거나 같은 경우
+    //   - 부모 노드가 있고 새로운 노드가 오른쪽 자식인 경우
     } else {
         parent_n->right = new_n;
     }
-
+    // 4. 새로운 노드의 주소 리턴하기
     return new_n;
 }
 
-// // 중위 트리 순회 과정 출력하기
-// // A function to do inorder traversal of BST
-// void inorder_tree_walk(struct Node* root) {
-//     if (root != NULL) {
-//         inorder_tree_walk(root->left);
-//         printf(" %d ", root->key);
-//         inorder_tree_walk(root->right);
-//     }
-// }
+// 노드 v1을 v2로 대체하는 함수
+void transplant(bstree* t, node_t* v1, node_t* v2) {
+    // 'v1의 부모'와 'v2'를 연결
+    // - v1 부모 관점
+    //   - v1이 루트인 경우
+    if (v1->parent == NULL) {
+        t->root = v2;
+    //   - v1이 왼쪽 자식인 경우
+    } else if (v1 == v1->parent->left) {
+        v1->parent->left = v2;
+    //   - v1이 오른쪽 자식인 경우
+    } else {
+        v1->parent->right = v2;
+    }    
+    // - v2 관점
+    if (v2 != NULL) {
+        v2->parent = v1->parent;
+    }
+}
 
-// // 탐색하기: 재귀 버전
-// // A function to search a given key in a given BST
-// struct Node* search(struct Node* root, int key) {
-//     // Base Cases: root is null or key is present at root
-//     if (root == NULL || root->key == key) {
-//         return root;
-//     }
-//     // key is greater than root's key
-//     if (key > root->key) {
-//         return search(root->right, key);
-//     // key is smaller than root's key
-//     } else {
-//         return search(root->left, key);
-//     }
-// }
+// 트리에서 노드 z를 삭제하는 함수
+int bstree_erase(const bstree *t, node_t *z) {
 
-// // 탐색하기: 순환적 형태
-// struct Node* iterative_search(struct Node* node, int key) {
-//     while (node != NULL && node->key != key) {
-//         if (key > node->key) {
-//             node = node->right;
-//         } else {
-//             node = node->left;
-//         }
-//     }
-//     return node;
-// }
-
-// // 새로운 노드 생성하기
-// // A function to create a new BST node
-// struct Node* make_node(int key) {
-//     // 새로운 노드에 메모리 할당
-//     struct Node* temp = (struct Node*)malloc(sizeof(struct Node));
-//     // 새로운 노드의 key 값 설정
-//     temp->key = key;
-//     // 새로운 노드의 left, right를 NULL로 초기화
-//     temp->left = temp->right = NULL;
-//     return temp;
-// }
-
-// // 트리에 새로운 노드 추가하기
-// // A function to insert a new node with given key in BST
-// void insert(struct Node* root, int key) {
-//     struct Node* parent = NULL;
-//     while ()
-// }
-
-
+}
