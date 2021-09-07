@@ -46,7 +46,7 @@ int main(void) {
     printf("Hello, RBTree!\n");
 
     node_t* nodes[10];
-    int values[10] = {10, 5, 12, 14, 20, 83, 65, 1, 99, 78};
+    int values[10] = {5, 12, 10, 14, 20, 83, 65, 1, 99, 78};
     int delete_result;
 
     // 트리 생성
@@ -463,12 +463,21 @@ int rbtree_erase(rbtree *t, node_t *z) {
     // (주의!) NIL과의 연결을 끊어주기
     // - 가령 CASE 1에서 z의 부모와 NIL이 연결되었다면, 
     //   z의 부모가 NIL을 가리키는 간선을 NULL로 변경해 주어야 함
-    if (NIL == NIL->parent->left) {
-        NIL->parent->left = NULL;
-    } else if (NIL == NIL->parent->right) {
-        NIL->parent->right = NULL;
+    if (NIL->parent != NULL) {
+        // NIL 부모 관점
+        // - NIL이 루트가 된 경우
+        if (t->root == NIL) {
+            t->root = NULL;
+        // - NIL이 왼쪽 자식인 경우
+        } else if (NIL->parent->left == NIL) {
+            NIL->parent->left = NULL;
+        // - NIL이 오른쪽 자식인 경우
+        } else if (NIL->parent->right == NIL) {
+            NIL->parent->right = NULL;
+        }
+        // NIL 관점
+        NIL->parent = NULL;
     }
-    NIL->parent = NULL;
 
     return 1;
 }
