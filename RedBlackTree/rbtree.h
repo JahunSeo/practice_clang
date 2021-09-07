@@ -36,7 +36,7 @@ node_t *rbtree_min(const rbtree *t, const key_t key);
 node_t *rbtree_max(const rbtree *t, const key_t key);
 
 // rbtree_erase:
-int rbtree_erase(rbtree *t, const node_t *node);
+int rbtree_erase(rbtree *t, node_t *z);
 
 // rbtree_to_array:
 // - size_t는 부호 없는 정수형(unsigned int)으로 이미 정의되어 있음

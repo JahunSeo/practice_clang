@@ -365,3 +365,70 @@ node_t *rbtree_successor(rbtree *t, node_t *x) {
 void rbtree_delete_fixup(rbtree *t, node_t *x) {
 
 }
+
+
+// rbtree_node_or_nil: x가 없는 경우, 더미 노드 NIL을 리턴함
+node_t* rbtree_node_or_nil(node_t *x) {
+    if (x == NULL) {
+        return NIL;
+    } else {
+        return x;
+    }
+}
+
+
+int rbtree_erase(rbtree *t, node_t *z) {
+    // 삭제될 노드 y
+    node_t* y = z;
+    // 삭제될 노드의 본래 색깔 저장
+    color_t y_original_color = y->color;
+    // y 자리를 채울 노드 x
+    node_t* x;
+    // [CASE 1] 삭제될 노드의 왼쪽 자식이 없는 경우
+    // - 오른쪽 자식으로 빈 자리를 채움 (이 때 오른쪽 자식이 NULL일 수도 있음)
+    if (z->left == NULL) {
+        // z의 오른쪽 자식으로 x를 설정
+        // - (실험적 코드) z의 오른쪽 자식이 비어 있는 경우, 더미 노드 NIL로 설정
+        x = rbtree_node_or_nil(z->right);
+        // z의 부모와 x를 연결
+        rbtree_transplant(t, z, x);
+        // z에 할당된 메모리 반환하기
+        free(z);
+    // [CASE 2] 삭제될 노드의 오른쪽 자식이 없는 경우
+    // - 왼쪽 자식으로 빈 자리를 채움 (이 때는 왼쪽 자식이 반드시 있음)
+    } else if (z->right == NULL) {
+        // z의 왼쪽 자식으로 x를 설정
+        // - (실험적 코드) z의 왼쪽 자식이 비어 있는 경우, 더미 노드 NIL로 설정
+        x = rbtree_node_or_nil(z->left);
+        // z의 부모와 x를 연결
+        rbtree_transplant(t, z, x);
+        // z에 할당된 메모리 반환하기
+        free(z);
+    // [CASE 3] 삭제될 노드의 양쪽 자식이 모두 있는 경우
+    } else {
+        // 삭제될 노드의 자리로 이동할 노드 y 업데이트
+        // - 삭제될 노드의 직후 원소
+        y = rbtree_successor(t, z);
+        // 이동할 노드 y의 본래 색깔 저장
+        y_original_color = y->color;
+        // y 자리를 채울 노드 x 업데이트
+        // - y의 오른쪽 자식으로 설정
+        // - y는 z의 오른쪽 서브트리에서 최소 노드이므로, y의 왼쪽 자식은 반드시 비어 있음
+        x = rbtree_node_or_nil(y->right);
+        // [CASE 3-1] y가 z의 오른쪽 자식인 경우
+        // [CASE 3-2] y가 z의 오른쪽 자식이 아닌 경우 (CASE 3-1, 3-2 통일 시도)
+        // z 자리로 y를 이동: 키값만 변경하는 방식으로 간접적으로 대체
+        z->key = y->key;
+        // y의 부모와 x를 연결: y 빼내기
+        //   - CASE 3-1의 경우, y의 부모는 z
+        //   - CASE 3-2의 경우, y의 부모는 z의 오른쪽 서브 트리 중 하나
+        rbtree_transplant(t, y, x);
+        // y에 할당된 메모리 반환하기: z가 삭제되고 빈 공간은 y 자리에 발생
+        free(y);
+    }
+    // 삭제 혹은 이동으로 발생한 빈 공간에 본래 검은 노드가 있었다면,
+    // 트리 높이에 불균형이 발생한 것이므로 fixup 실행
+    if (y_original_color == RBTREE_BLACK) {
+        rbtree_delete_fixup(t, x);
+    }
+}
