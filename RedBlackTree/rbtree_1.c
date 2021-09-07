@@ -33,9 +33,9 @@ void rbtree_delete_fixup(rbtree *t, node_t *x);
 // 전역 변수로 NIL 초기화 //
 node_t _NIL = {
     .color = RBTREE_BLACK,
-    .left = NULL,
-    .right = NULL,
-    .parent = NULL,
+    .left = NULL, // 변경되는 상황 없음
+    .right = NULL, // 변경되는 상황 없음
+    .parent = NULL, // 변경될 수 있음!
 };
 node_t *NIL = &_NIL;
 
@@ -361,12 +361,6 @@ node_t *rbtree_successor(rbtree *t, node_t *x) {
 }
 
 
-// rbtree_delete_fixup:
-void rbtree_delete_fixup(rbtree *t, node_t *x) {
-
-}
-
-
 // rbtree_node_or_nil: x가 없는 경우, 더미 노드 NIL을 리턴함
 node_t* rbtree_node_or_nil(node_t *x) {
     if (x == NULL) {
@@ -374,6 +368,93 @@ node_t* rbtree_node_or_nil(node_t *x) {
     } else {
         return x;
     }
+}
+
+
+// rbtree_delete_fixup:
+void rbtree_delete_fixup(rbtree *t, node_t *x) {
+    // x의 형제 노드 sibling
+    node_t *sib, *sib_left, *sib_right;
+    // 여분의 BLACK 노드를 위쪽으로 이동시킴
+    // - x가 루트가 아니므로 x의 parent는 반드시 있음
+    while (x != t->root && x->color == RBTREE_BLACK) {
+        // x가 왼쪽 자식인 경우
+        if (x == x->parent->left) {
+            // 형제 노드는 부모의 오른쪽 자식
+            // - sibling이 없는 경우 발생 가능? sib->color를 RED로 설정하는 걸 보면, 발생 불가능할 것 같긴 한데..
+            //  (x와 sib가 모두 NIL이더라도 x->parent만 활용하고 수정할 상황이 없으므로 문제 없음)
+            sib = x->parent->right; // rbtree_node_or_nil(x->parent->right);
+            // [CASE 1] 형제가 RED인 경우
+            // - x의 sibling을 BLACK으로 만들어 줌
+            if (sib->color == RBTREE_RED) {
+                sib->color = RBTREE_BLACK;
+                x->parent->color = RBTREE_RED;
+                rbtree_rotate_left(t, x->parent);
+                sib = x->parent->right;
+            }
+            // [CASE 2] 형제가 BLACK이고 형제의 두 자식이 모두 BLACK인 경우
+            // - 이 경우는 빈 공간을 위로 올리기 때문에 루트에 도달할 때까지 반복될 수 있음
+            // - (형제의 자식들이 NULL일 수 있을까?)
+            sib_left = rbtree_node_or_nil(sib->left);
+            sib_right = rbtree_node_or_nil(sib->right);
+            if (sib_left->color == RBTREE_BLACK && sib_right->color == RBTREE_BLACK) {
+                sib->color = RBTREE_RED;
+                x = x->parent;
+            } else {
+                // [CASE 3] 형제가 BLACK이고 형제의 오른쪽 자식만 BLACK인 경우
+                // - 형제의 왼쪽 자식은 RED
+                if (sib_right->color == RBTREE_BLACK) {
+                    sib_left->color = RBTREE_BLACK;
+                    sib->color = RBTREE_RED;
+                    rbtree_rotate_right(t, sib);
+                    sib = x->parent->right;
+                } 
+                // [CASE 4] 형제가 BLACK이고 형제의 오른쪽 자식이 RED인 경우
+                // - 형제의 왼쪽 자식은 RED, BLACK 둘 다 가능
+                sib->color = x->parent->color;
+                x->parent->color = RBTREE_BLACK;
+                sib->right->color = RBTREE_BLACK;
+                rbtree_rotate_left(t, x->parent);
+                x = t->root;
+            }
+        // x가 오른쪽 자식인 경우
+        } else {
+            // 형제 노드는 부모의 왼쪽 자식
+            sib = x->parent->left;
+            // [CASE 1]
+            if (sib->color == RBTREE_RED) {
+                sib->color = RBTREE_BLACK;
+                x->parent->color = RBTREE_RED;
+                rbtree_rotate_right(t, x->parent);
+                sib = x->parent->left;
+            }
+            // [CASE 2] 형제 BLACK, 형제 두 자식 모두 BLACK
+            sib_left = rbtree_node_or_nil(sib->left);
+            sib_right = rbtree_node_or_nil(sib->right);
+            if (sib_left->color == RBTREE_BLACK && sib_right->color == RBTREE_BLACK) {
+                sib->color = RBTREE_RED;
+                x = x->parent;
+            } else {
+                // [CASE 3] 형제 BLACK, 형제의 왼쪽 자식 BLACK
+                // - 형제의 오른쪽 자식은 RED
+                if (sib_left->color == RBTREE_BLACK) {
+                    sib->right->color = RBTREE_BLACK;
+                    sib->color = RBTREE_RED;
+                    rbtree_rotate_left(t, sib);
+                    sib = x->parent->left;
+                }
+                // [CASE 4] 형제 BLACK, 형제의 왼쪽 자식 RED
+                // - 형재의 오른쪽 자식은 RED, BLACK 둘 다 가능
+                sib->color = x->parent->color;
+                x->parent->color = RBTREE_BLACK;
+                sib->left->color = RBTREE_BLACK;
+                rbtree_rotate_right(t, x->parent);
+                x = t->root;
+            }
+        }
+    }
+    // x의 색깔을 BLACK으로 설정
+    x->color = RBTREE_BLACK;
 }
 
 
@@ -460,9 +541,10 @@ int rbtree_erase(rbtree *t, node_t *z) {
     if (y_original_color == RBTREE_BLACK) {
         rbtree_delete_fixup(t, x);
     }
-    // (주의!) NIL과의 연결을 끊어주기
+    // NIL과의 연결을 끊어주기
     // - 가령 CASE 1에서 z의 부모와 NIL이 연결되었다면, 
     //   z의 부모가 NIL을 가리키는 간선을 NULL로 변경해 주어야 함
+    // - (주의!) NIL의 parent가 없을 수 있으므로 체크
     if (NIL->parent != NULL) {
         // NIL 부모 관점
         // - NIL이 루트가 된 경우
