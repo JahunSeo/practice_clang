@@ -45,29 +45,29 @@ node_t *NIL = &_NIL;
 int main(void) {
     printf("Hello, RBTree!\n");
 
+    node_t* nodes[10];
+    int values[10] = {10, 5, 12, 14, 20, 83, 65, 1, 99, 78};
+    int delete_result;
+
     // 트리 생성
     rbtree *t = new_rbtree();
     // 비어 있는 트리 확인
     printf("rbtree : ");
     rbtree_inorder_walk(t->root);
     printf("\n\n");
-    // 트리에 10 추가
-    rbtree_insert(t, 10);
-    printf("rbtree : ");
-    rbtree_inorder_walk(t->root);
-    printf("\n\n");
-    // 트리에 5, 15 추가
-    rbtree_insert(t, 5);
-    rbtree_insert(t, 15);
-    printf("rbtree : ");
-    rbtree_inorder_walk(t->root);
-    printf("\n\n");
-    // 트리에 35, 20 추가
-    rbtree_insert(t, 35);
-    rbtree_insert(t, 20);
-    printf("rbtree : ");
-    rbtree_inorder_walk(t->root);    
-    printf("\n\n");
+
+    for (int i=0; i<10; i++) {
+        nodes[i] = rbtree_insert(t, values[i]);
+        printf("rbtree : ");
+        rbtree_inorder_walk(t->root);
+        printf("\n");
+    }
+    for (int i=9; i>=0; i--) {
+        delete_result = rbtree_erase(t, nodes[i]);
+        printf("rbtree : ");
+        rbtree_inorder_walk(t->root);    
+        printf("\n");
+    }
 
     return 0;
 }
@@ -299,17 +299,17 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
     }
     // 4. RB트리 특성 유지시키기
     /* DEBUGGING */
-    printf("before fixup : ");
-    rbtree_inorder_walk(t->root);
-    printf("\n");
+    // printf("before fixup : ");
+    // rbtree_inorder_walk(t->root);
+    // printf("\n");
     /* ** ** ** */
 
     rbtree_insert_fixup(t, new_n);
 
     /* DEBUGGING */
-    printf("after fixup : ");
-    rbtree_inorder_walk(t->root);
-    printf("\n");
+    // printf("after fixup : ");
+    // rbtree_inorder_walk(t->root);
+    // printf("\n");
     /* ** ** ** */
 
     // 5. 새로운 노드의 주소 리턴하기
@@ -378,6 +378,7 @@ node_t* rbtree_node_or_nil(node_t *x) {
 
 
 int rbtree_erase(rbtree *t, node_t *z) {
+    printf("[rbtree_erase] %d\n", z->key);
     // 삭제될 노드 y
     node_t* y = z;
     // 삭제될 노드의 본래 색깔 저장
@@ -431,4 +432,15 @@ int rbtree_erase(rbtree *t, node_t *z) {
     if (y_original_color == RBTREE_BLACK) {
         rbtree_delete_fixup(t, x);
     }
+    // NIL과의 연결을 끊어주기
+    // - 가령 CASE 1에서 z의 부모와 NIL이 연결되었다면, 
+    //   z의 부모가 NIL을 가리키는 간선을 NULL로 변경해 주어야 함
+    if (NIL == NIL->parent->left) {
+        NIL->parent->left = NULL;
+    } else if (NIL == NIL->parent->right) {
+        NIL->parent->right = NULL;
+    }
+    NIL->parent = NULL;
+
+    return 1;
 }
