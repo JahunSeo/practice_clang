@@ -22,6 +22,16 @@ void rbtree_inorder_walk(const node_t *x);
 // 그래프 그리기
 void rbtree_graph(const rbtree *t);
 
+
+// 전역 변수로 NIL 초기화 //
+node_t _NIL = {
+    .color = RBTREE_BLACK,
+    .left = NULL,
+    .right = NULL,
+    .parent = NULL,
+};
+node_t *NIL = &_NIL;
+
 /* 
  * main 함수
  */
