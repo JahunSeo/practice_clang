@@ -1,13 +1,11 @@
 #include <stdio.h>
-int add(int v) {
-    printf("add! %d\n", v);
-    return v + 3;
-}
-
 int main(void) {
-    int a = 3;
-    printf("%d\n", a);
-    a = add(a);
-    printf("%d\n", a);
+    int n;
+    scanf("%d", &n);
+    
+    for (int i=1; i<=n; i++) {
+        printf("%d\n",i);
+    }
+  
     return 0;
 }
