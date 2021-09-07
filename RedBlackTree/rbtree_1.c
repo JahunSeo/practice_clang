@@ -7,6 +7,10 @@
  * 추가 함수 입출력값 정의
  */
 
+
+// 중위 트리 순회
+void rbtree_inorder_walk(const node_t *x);
+
 // rbtree_rotate_left:
 void rbtree_rotate_left(rbtree *t, node_t *x);
 
@@ -16,11 +20,14 @@ void rbtree_rotate_right(rbtree *t, node_t *x);
 // rbtree_insert_fixup:
 void rbtree_insert_fixup(rbtree *t, node_t *z);
 
-// 중위 트리 순회
-void rbtree_inorder_walk(const node_t *x);
+// rbtree_transplant:
+void rbtree_transplant(rbtree *t, node_t *v1, node_t *v2);
 
-// 그래프 그리기
-void rbtree_graph(const rbtree *t);
+// rbtree_successor:
+node_t *rbtree_successor(rbtree *t, node_t *x);
+
+// rbtree_delete_fixup:
+void rbtree_delete_fixup(rbtree *t, node_t *x);
 
 
 // 전역 변수로 NIL 초기화 //
@@ -73,12 +80,14 @@ rbtree *new_rbtree(void) {
     return t;
 }
 
+
 void delete_rbtree(rbtree *t) {
     // TODO: 모든 노드의 메모리 반환하기
 
     // 트리의 메모리 반환하기
     free(t);
 }
+
 
 void rbtree_inorder_walk(const node_t *x) {
     if (x != NULL) {
@@ -100,10 +109,6 @@ void rbtree_inorder_walk(const node_t *x) {
     }
 }
 
-void rbtree_graph(const rbtree* t) {
-    node_t frontier[10];
-
-}
 
 void rbtree_rotate_left(rbtree *t, node_t *x) {
     // 1. 'y' 설정: 기준이 되는 x의 오른쪽 자식
@@ -136,6 +141,7 @@ void rbtree_rotate_left(rbtree *t, node_t *x) {
     y->left = x;
 }
 
+
 void rbtree_rotate_right(rbtree *t, node_t *x) {
     // 1. 'y' 설정: 기준이 되는 x의 왼쪽 자식
     node_t *y = x->left;
@@ -166,6 +172,7 @@ void rbtree_rotate_right(rbtree *t, node_t *x) {
     // - y 관점
     y->right = x;
 }
+
 
 void rbtree_insert_fixup(rbtree *t, node_t *z) {
     // [주의] 노드의 NULL 체크
@@ -253,6 +260,7 @@ void rbtree_insert_fixup(rbtree *t, node_t *z) {
     t->root->color = RBTREE_BLACK;
 }
 
+
 node_t *rbtree_insert(rbtree *t, const key_t key) {
     printf("[rbtree_insert] %d\n", key);
     // 1. 새로운 노드 생성하기
@@ -306,4 +314,54 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
 
     // 5. 새로운 노드의 주소 리턴하기
     return new_n;
+}
+
+
+void rbtree_transplant(rbtree* t, node_t* v1, node_t* v2) {
+    // 노드 v1을 노드 v2로 대체하기 (v1의 부모와 v2를 연결하기)
+    // - (주의) 이 때 v2가 NULL일 수 있음
+    // - 'v1 부모' 관점
+    //   - v1이 루트인 경우
+    if (v1->parent == NULL) {
+        t->root = v2;
+    //   - v1이 왼쪽 자식인 경우
+    } else if (v1 == v1->parent->left) {
+        v1->parent->left = v2;
+    //   - v1이 오른쪽 자식인 경우
+    } else {
+        v1->parent->right = v2;
+    }
+    // - v2 관점
+    if (v2 != NULL) {
+        v2->parent = v1->parent;
+    }
+}
+
+
+// rbtree_successor:
+node_t *rbtree_successor(rbtree *t, node_t *x) {
+    // 직후 원소 찾기
+    // 본인의 오른쪽 자식이 있는 경우
+    // - 오른쪽 서브 트리에서 가장 작은 노드
+    if (x->right != NULL) {
+        node_t* child = x->right;
+        while (child->left != NULL) {
+            child = child->left;
+        }
+        return child;
+    }
+    // 본인의 오른쪽 자식이 없는 경우 (bstree 맥락애서는 쓰이지 않음)
+    // - 왼쪽 위로 올라가다 처음 오른쪽 위로 꺾였을 때의 첫 노드
+    node_t* parent = x->parent;
+    while (parent != NULL && x == parent->right) {
+        x = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+
+// rbtree_delete_fixup:
+void rbtree_delete_fixup(rbtree *t, node_t *x) {
+
 }
