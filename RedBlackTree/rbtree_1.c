@@ -158,10 +158,17 @@ void rbtree_rotate_right(rbtree *t, node_t *x) {
 }
 
 void rbtree_insert_fixup(rbtree *t, node_t *z) {
+    // [주의] 노드의 NULL 체크
+    // - 경계노드 NIL을 도입하면 NIL의 컬러가 BLACK이기 때문에 아래 2개 상황에서 코드가 간결해짐
+    // 1) while (z->parent != NULL && z->parent->color == RBTREE_RED) {
+    //   - z->parent 가 NIL인 경우, 컬러가 BLACK이어서 두 번째 조건만으로도 처리 가능
+    // 2) if (uncle != NULL && uncle->color == RBTREE_RED) {
+    //   - uncle이 NIL인 경우, 컬러가 BLACK이어서 두 번째 조건만으로 처리 가능
+
     // 1. 트리 규칙을 위반한 영역 수정하기
     // - 'z'는 트리 규칙에 문제가 생길 수 있는 노드이며, 그 시작은 트리에 새로 추가된 노드
     // - 'z'-'z 부모'가 RED-RED 인지 확인하여 규칙을 유지할 수 있도록 트리의 구조 변경
-    // - (주의! 경계노드 NIL을 별도로 활용하지 않고 있어서 부모 노드 NULL 여부 체크 필요)
+    // - (주의! 경계노드 NIL을 별도로 활용하지 않으므로 부모 노드 NULL 여부 체크 필요)
     node_t *uncle;    
     while (z->parent != NULL && z->parent->color == RBTREE_RED) {
         // 'z 부모'가 왼쪽 자식인 경우
@@ -173,7 +180,7 @@ void rbtree_insert_fixup(rbtree *t, node_t *z) {
             // - 부모와 삼촌을 BLACK, 할아버지를 RED로 바꾸면, 일단 z와 부모 간의 문제는 해결
             // - 하지만 할아버지가 RED로 변하여 본인의 부모와 없던 문제가 생길 수 있으므로,
             // - z를 'z의 부모 부모(=할아버지)'로 업데이트
-            // - (주의! uncle 노드 NULL 여부 체크 필요)
+            // - (주의! 경계노드 NIL을 별도로 활용하지 않으므로 uncle 노드 NULL 여부 체크 필요)
             if (uncle != NULL && uncle->color == RBTREE_RED) {
                 // 부모와 삼촌을 BLACK으로
                 z->parent->color = RBTREE_BLACK;
