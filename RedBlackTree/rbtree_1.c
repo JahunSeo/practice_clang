@@ -62,7 +62,7 @@ int main(void) {
         rbtree_inorder_walk(t->root);
         printf("\n");
     }
-    for (int i=9; i>=0; i--) {
+    for (int i=0; i<10; i++) {
         delete_result = rbtree_erase(t, nodes[i]);
         printf("rbtree : ");
         rbtree_inorder_walk(t->root);    
