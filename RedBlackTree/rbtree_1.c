@@ -408,7 +408,7 @@ int rbtree_erase(rbtree *t, node_t *z) {
     // [CASE 3] 삭제될 노드의 양쪽 자식이 모두 있는 경우
     } else {
         // 삭제될 노드의 자리로 이동할 노드 y 업데이트
-        // - 삭제될 노드의 직후 원소
+        // - 삭제될 노드의 직후 원소이며 NULL일 수 없음 
         y = rbtree_successor(t, z);
         // 이동할 노드 y의 본래 색깔 저장
         y_original_color = y->color;
@@ -417,22 +417,50 @@ int rbtree_erase(rbtree *t, node_t *z) {
         // - y는 z의 오른쪽 서브트리에서 최소 노드이므로, y의 왼쪽 자식은 반드시 비어 있음
         x = rbtree_node_or_nil(y->right);
         // [CASE 3-1] y가 z의 오른쪽 자식인 경우
-        // [CASE 3-2] y가 z의 오른쪽 자식이 아닌 경우 (CASE 3-1, 3-2 통일 시도)
-        // z 자리로 y를 이동: 키값만 변경하는 방식으로 간접적으로 대체
-        z->key = y->key;
-        // y의 부모와 x를 연결: y 빼내기
-        //   - CASE 3-1의 경우, y의 부모는 z
-        //   - CASE 3-2의 경우, y의 부모는 z의 오른쪽 서브 트리 중 하나
-        rbtree_transplant(t, y, x);
-        // y에 할당된 메모리 반환하기: z가 삭제되고 빈 공간은 y 자리에 발생
-        free(y);
+        // - z y x가 일직선에 놓인 상황
+        if (y->parent == z) {
+            // y와 x를 연결
+            // - 다른 상황에서는 transplant 함수를 통해 y의 부모에 x를 연결하지만, 
+            // - 이 상황에서는 y의 부모가 z여서 삭제되기 때문에 y에 연결함
+            // - x가 NIL인 상황을 위해 명시적으로 처리
+            x->parent = y;
+        // [CASE 3-2] y가 z의 오른쪽 자식이 아닌 경우
+        } else {
+            // y의 부모와 x를 연결 (y를 빼냄)
+            rbtree_transplant(t, y, x);
+            // z의 오른쪽 서브트리를 y의 오른쪽 자식으로 연결
+            y->right = z->right;
+            y->right->parent = y;
+        }
+        // [CASE 3-1, 3-2] 공통
+        // z의 부모와 y를 연결
+        rbtree_transplant(t, z, y);
+        // z의 왼쪽 서브트리를 y의 왼쪽 자식으로 연결
+        y->left = z->left;
+        y->left->parent = y;
+        // y의 색깔을 기존 z의 색깔로 변경
+        y->color = z->color;
+        // z에 할당된 메모리 반환하기: z가 삭제되고 빈 공간은 y 자리에 발생
+        free(z);
+
+        // [ DEPRECATED ] CASE 3-1, 3-2 통일 시도
+        // - 폐기 이유: 노드의 주소값을 유지해야하는 경우 활용할 수 없음
+        // - 하지만 엄청 간결하기 때문에 기록 목적으로 남겨둠
+        // // z 자리로 y를 이동: 키값만 변경하는 방식으로 간접적으로 대체
+        // z->key = y->key;
+        // // y의 부모와 x를 연결: y 빼내기
+        // //   - CASE 3-1의 경우, y의 부모는 z
+        // //   - CASE 3-2의 경우, y의 부모는 z의 오른쪽 서브 트리 중 하나
+        // rbtree_transplant(t, y, x);
+        // // y에 할당된 메모리 반환하기: z가 삭제되고 빈 공간은 y 자리에 발생
+        // free(y);
     }
     // 삭제 혹은 이동으로 발생한 빈 공간에 본래 검은 노드가 있었다면,
     // 트리 높이에 불균형이 발생한 것이므로 fixup 실행
     if (y_original_color == RBTREE_BLACK) {
         rbtree_delete_fixup(t, x);
     }
-    // NIL과의 연결을 끊어주기
+    // (주의!) NIL과의 연결을 끊어주기
     // - 가령 CASE 1에서 z의 부모와 NIL이 연결되었다면, 
     //   z의 부모가 NIL을 가리키는 간선을 NULL로 변경해 주어야 함
     if (NIL == NIL->parent->left) {
