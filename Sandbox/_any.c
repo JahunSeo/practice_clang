@@ -1,37 +1,35 @@
 #include <stdio.h>
 int main(void) {
-    char arr[100000] = {0};
-    scanf("%s", arr);
-    int i=0;
-    int count[26] = {0};
-    while (arr[i] != 0) {
-        // printf("%c\n", arr[i]);
-        // 대문자인 경우
-        if (arr[i] < 'a') {
-            count[arr[i]-'A'] += 1;            
-        } else {
-            count[arr[i]-'a'] += 1;                        
+    int n;
+    scanf("%d", &n);
+    int ans = 0;
+    char str[100];
+    for (int i=0; i<n; i++) {
+        scanf("%s", str);
+        int alphabet[26] = {0};
+        int j = 0;
+        int found = 1;
+        while(str[j]) {
+            // printf("%d %c\n", j, str[j]);
+            // 이전의 문자와 동일하면 넘어감
+            if (j >= 0 && str[j] == str[j-1]) {
+                // printf("case 1\n");
+            }
+            // 이전의 문자와 다를 경우, 새로운 문자인지 확인
+            else if (alphabet[str[j] - 'a'] != 0) {
+                // printf("case 2\n");
+                found = 0;
+                break;
+            } else {
+                // printf("case 3\n");
+                alphabet[str[j] - 'a'] = 1;
+            }
+            j++;
         }
-        i++;
-    }
-    
-    int max_idx = 0;
-    int is_only = 1;
-    for (int i=1; i < 26; i++) {
-        if (count[i] > count[max_idx]) {
-            max_idx = i;
-            is_only = 1;
-        } else if (count[i] == count[max_idx]) {
-            is_only = 0;
+        if (found) {
+            ans++;
         }
-        // printf("%c %d\n", i+'A', count[i]);
     }
-    
-    if (is_only == 1) {
-        printf("%c\n", max_idx + 'A');
-    } else {
-        printf("?\n");
-    }
-    
+    printf("%d\n", ans);
     return 0;
 }
